@@ -10,6 +10,9 @@ from langchain.chat_models.openai import ChatOpenAI
 from langchain.memory import ConversationBufferMemory
 from langchain.chains.conversational_retrieval.base import ConversationalRetrievalChain
 from htmlTemplates import css, bot_template, user_template
+from langchain_anthropic import ChatAnthropic
+from langchain_chroma import Chroma
+
 
 
 def get_pdf_text(pdf_docs):
@@ -35,15 +38,17 @@ def get_text_chunks(text):
 def get_vectorstore(text_chunks):
     embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
     #embeddings = HuggingFaceInstructEmbeddings(model_name="hkunlp/instructor-xl")
-    vectorstore = FAISS.from_texts(texts=text_chunks , embedding=embeddings )
+    vectorstore = Chroma(persist_directory="./chroma_db", embedding_function=embeddings)
+    #vectorstore = Chroma.from_texts(texts=text_chunks , embedding=embeddings )
+    #vectorstore2 = Chroma.from_texts(texts=text_chunks, embedding=embeddings, persist_directory="./chroma_db")
     return vectorstore
     
 def get_conversation_chain(vectorstore):
-    llm = ChatOpenAI(model_name="gpt-4-0125-preview")
+    llm = ChatAnthropic(model='claude-3-sonnet-20240229')
     memory = ConversationBufferMemory(memory_key='chat_history',return_messages=True)
     conversation_chain = ConversationalRetrievalChain.from_llm(
         llm=llm,
-        retriever=vectorstore.as_retriever(),
+        retriever=vectorstore.as_retriever(k=10),
         memory=memory
     )
     return conversation_chain
