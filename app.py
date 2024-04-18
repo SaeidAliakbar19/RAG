@@ -26,7 +26,7 @@ def get_pdf_text(pdf_docs):
 
 def get_text_chunks(text):
     text_splitter = CharacterTextSplitter (
-        separator="\n",
+        separator="ماده",
         chunk_size = 1000,
         chunk_overlap = 100,
         length_function = len
@@ -38,9 +38,9 @@ def get_text_chunks(text):
 def get_vectorstore(text_chunks):
     embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
     #embeddings = HuggingFaceInstructEmbeddings(model_name="hkunlp/instructor-xl")
-    vectorstore = Chroma(persist_directory="./chroma_db", embedding_function=embeddings)
+    vectorstore = Chroma(persist_directory="./Law", embedding_function=embeddings)
     #vectorstore = Chroma.from_texts(texts=text_chunks , embedding=embeddings )
-    #vectorstore2 = Chroma.from_texts(texts=text_chunks, embedding=embeddings, persist_directory="./chroma_db")
+    #vectorstore2 = Chroma.from_texts(texts=text_chunks, embedding=embeddings, persist_directory="./Law")
     return vectorstore
     
 def get_conversation_chain(vectorstore):
@@ -59,9 +59,13 @@ def handle_userinput(user_question):
 
     for i, message in enumerate(st.session_state.chat_history):
         if i % 2 ==0:
-            st.write(user_template.replace("{{MSG}}",message.content),unsafe_allow_html=True)
+            #st.write(user_template.replace("{{MSG}}",message.content),unsafe_allow_html=True)
+            with st.chat_message("Aliakbar+"):
+                st.markdown(message.content)
         else:
-            st.write(bot_template.replace("{{MSG}}",message.content),unsafe_allow_html=True)
+            #st.write(bot_template.replace("{{MSG}}",message.content),unsafe_allow_html=True)
+             with st.chat_message("Human"):
+                st.markdown(message.content)
 
 
 def main():
@@ -76,7 +80,7 @@ def main():
         st.session_state.chat_history = None
 
     st.header("I can help you chat about your documents.")
-    user_question = st.text_input("Before we begin, please ensure you've uploaded your files from the sidebar.")
+    user_question = st.chat_input("Before we begin, please ensure you've uploaded your files from the sidebar.")
     if user_question:
         handle_userinput(user_question)
 
